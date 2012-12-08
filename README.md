@@ -1,2 +1,2 @@
-rails-ajaxe
+rails-ajax-handler
 ===========
