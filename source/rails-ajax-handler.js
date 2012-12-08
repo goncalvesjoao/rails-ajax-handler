@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.2.0 - 08 December, 2012
+ * rails-ajax-handler.js v0.2.1 - 08 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -18,21 +18,32 @@ function RailsAjaxHandler(options) {
   this.debug = true;
   this.handler_prefix = 'handler';
   this.error_message = {
-    wrapper_html: "span",
+    wrapper_html: 'span',
     wrapper_class: 'label label-important'
+  }
+  this.error_fields = {
+    wrapper_html: 'div',
+    wrapper_class: 'field_with_errors',
+    wrap: true
   }
 
   this.setOptions = function(_options) {
     debug = (_options["debug"] != undefined) ? _options["debug"] : debug;
     handler_prefix = _options["handler_prefix"] || handler_prefix;
-    this.error_message = {
+    error_message = {
       wrapper_html: (_options["error_message"] && _options["error_message"]["wrapper_html"]) || error_message.wrapper_html,
       wrapper_class: (_options["error_message"] && _options["error_message"]["wrapper_class"]) || error_message.wrapper_class
+    }
+    error_fields = {
+      wrapper_html: (_options["error_fields"] && _options["error_fields"]["wrapper_html"]) || error_fields.wrapper_html,
+      wrapper_class: (_options["error_fields"] && _options["error_fields"]["wrapper_class"]) || error_fields.wrapper_class,
+      wrap: (_options["error_fields"] && _options["error_fields"]["wrap"] != undefined) ? _options["error_fields"]["wrap"] : error_fields.wrap
     }
   }
 
   this.clear_error_messages = function() {
     $('.' + handler_prefix + '_error_message').remove();
+    $('.' + handler_prefix + '_error_wrapped').removeClass(handler_prefix + '_error_wrapped').unwrap();
   }
 
   this.show_error_messages = function(model_name, errors) {
@@ -41,8 +52,21 @@ function RailsAjaxHandler(options) {
     var errors_string = [];
     $.each(errors, function(key, value) {
       var input = $('input[name="' + model_name + '[' + key + ']"]');
+      var input_label = null;
+      var message_html = '<' + error_message.wrapper_html + ' class="' + handler_prefix + '_error_message ' + error_message.wrapper_class + '">' + value.join('<br/>') + '</' + error_message.wrapper_html + '>';
+      var error_wrapper_html = '<' + error_fields.wrapper_html + ' class="' + error_fields.wrapper_class + '" />';
+
       if (input.length > 0) {
-        input.after('<' + error_message.wrapper_html + ' class="' + handler_prefix + '_error_message ' + error_message.wrapper_class + '">' + value.join('<br/>') + '</' + error_message.wrapper_html + '>');
+        input_label = $('label[for="' + input.attr('id') + '"]');
+        if (error_fields.wrap) {
+          input.wrap(error_wrapper_html).addClass(handler_prefix + '_error_wrapped');
+          input.parent().after(message_html);
+        } else {
+          input.after(message_html);
+        }
+      }
+      if (input_label != null && input_label.length > 0 && error_fields.wrap) {
+        input_label.wrap(error_wrapper_html).addClass(handler_prefix + '_error_wrapped');
       }
       errors_string.push(key + ': ' + value.join(', '));
     });
