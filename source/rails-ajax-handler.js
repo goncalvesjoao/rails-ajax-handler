@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.2.1 - 08 December, 2012
+ * rails-ajax-handler.js v0.2.2 - 09 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -15,16 +15,16 @@ function RailsAjaxHandler(options) {
     arguments.callee._singletonInstance = this;
   }
 
-  this.debug = true;
-  this.handler_prefix = 'handler';
+  this.debug = null;
+  this.handler_prefix = null;
   this.error_message = {
-    wrapper_html: 'span',
-    wrapper_class: 'label label-important'
+    wrapper_html: null,
+    wrapper_class: null
   }
   this.error_fields = {
-    wrapper_html: 'div',
-    wrapper_class: 'field_with_errors',
-    wrap: true
+    wrapper_html: null,
+    wrapper_class: null,
+    wrap: null
   }
 
   this.setOptions = function(_options) {
@@ -38,6 +38,20 @@ function RailsAjaxHandler(options) {
       wrapper_html: (_options["error_fields"] && _options["error_fields"]["wrapper_html"]) || error_fields.wrapper_html,
       wrapper_class: (_options["error_fields"] && _options["error_fields"]["wrapper_class"]) || error_fields.wrapper_class,
       wrap: (_options["error_fields"] && _options["error_fields"]["wrap"] != undefined) ? _options["error_fields"]["wrap"] : error_fields.wrap
+    }
+  }
+
+  this.resetOptions = function() {
+    this.debug = false;
+    this.handler_prefix = 'handler';
+    this.error_message = {
+      wrapper_html: 'span',
+      wrapper_class: 'field_with_errors'
+    }
+    this.error_fields = {
+      wrapper_html: 'div',
+      wrapper_class: 'field_with_errors',
+      wrap: true
     }
   }
 
@@ -131,6 +145,7 @@ function RailsAjaxHandler(options) {
     }
   } // bind_rails_ujs_ajax_events
 
+  this.resetOptions();
   this.setOptions(options);
   this.bind_rails_ujs_ajax_events();
 } // RailsAjaxHandler
