@@ -1,0 +1,9 @@
+.handler_general_spinner {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	display: none;
+	background: url('/assets/spinner_24x24.gif') no-repeat center center;
+}
