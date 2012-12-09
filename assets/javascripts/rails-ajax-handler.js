@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.3.2 - 09 December, 2012
+ * rails-ajax-handler.js v0.3.3 - 09 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -200,7 +200,8 @@ function RailsAjaxHandler(options) {
 
   this.ajax_error = function(object_to_handle, event, xhr, status, error) {
     if ($(object_to_handle).data('type') == 'json' && $(object_to_handle).data(prefix + 'show-errors') != undefined) {
-      show_error_messages($(object_to_handle).data(prefix + 'show-errors'), $.parseJSON(xhr.responseText));
+      var data = $.parseJSON(xhr.responseText);
+      show_error_messages($(object_to_handle).data(prefix + 'show-errors'), data.errors != null ? data.errors : data);
     }
     window[get_callback(object_to_handle, 'error')](xhr, status, error);
     spinner_animation_stop(object_to_handle);
