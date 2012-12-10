@@ -1,0 +1,25 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Title:</b>
+  <%= @anime.title %>
+</p>
+
+<p>
+  <b>Type:</b>
+  <%= @anime.type %>
+</p>
+
+<p>
+  <b>Eps:</b>
+  <%= @anime.eps %>
+</p>
+
+<p>
+  <b>Finished:</b>
+  <%= @anime.finished %>
+</p>
+
+
+<%= link_to 'Edit', edit_anime_path(@anime) %> |
+<%= link_to 'Back', animes_path %>
