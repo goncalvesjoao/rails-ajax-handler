@@ -2,7 +2,7 @@ class AnimesController < ApplicationController
   # GET /animes
   # GET /animes.json
   def index
-    @animes = Anime.all
+    @animes = Anime.page(params[:page])
 
     respond_to do |format|
       format.html # index.html.erb

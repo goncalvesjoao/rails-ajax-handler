@@ -1,5 +1,8 @@
 <h1>Listing animes</h1>
 
+<%= link_to 'New Anime', new_anime_path %>
+<br><br>
+
 <table>
   <tr>
     <th>Title</th>
@@ -27,5 +30,4 @@
 </table>
 
 <br />
-
-<%= link_to 'New Anime', new_anime_path %>
+<%= paginate @animes %>

@@ -26,6 +26,13 @@ ActiveRecord::Schema.define(:version => 20121210215206) do
     t.datetime "cover_updated_at"
   end
 
+  create_table "animes_matinees", :force => true do |t|
+    t.integer  "matinee_id"
+    t.integer  "anime_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
   create_table "matinees", :force => true do |t|
     t.string   "name"
     t.text     "description"
@@ -36,13 +43,6 @@ ActiveRecord::Schema.define(:version => 20121210215206) do
     t.string   "photo_content_type"
     t.integer  "photo_file_size"
     t.datetime "photo_updated_at"
-  end
-
-  create_table "matinees_animes", :force => true do |t|
-    t.integer  "matinee_id"
-    t.integer  "anime_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
   end
 
 end

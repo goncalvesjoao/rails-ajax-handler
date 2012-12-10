@@ -4,4 +4,6 @@ class Anime < ActiveRecord::Base
   attr_accessible :eps, :finished, :title, :serie_type, :cover
 
   has_attached_file :cover, :styles => { :medium => "300x300>", :thumb => "100x100>" }
+
+  paginates_per 5
 end

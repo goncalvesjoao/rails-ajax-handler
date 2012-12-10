@@ -1,6 +1,6 @@
-class CreateMatineesAnimes < ActiveRecord::Migration
+class CreateAnimesMatinees < ActiveRecord::Migration
   def change
-    create_table :matinees_animes do |t|
+    create_table :animes_matinees do |t|
       t.integer :matinee_id
       t.integer :anime_id
 
