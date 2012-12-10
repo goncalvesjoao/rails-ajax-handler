@@ -1,0 +1,24 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Name:</b>
+  <%= @matinee.name %>
+</p>
+
+<p>
+  <b>Description:</b>
+  <%= @matinee.description %>
+</p>
+
+<p>
+  <b>Organizer:</b>
+  <%= @matinee.organizer %>
+</p>
+
+<p>
+  <b>Photo:</b>
+  <%= image_tag @matinee.photo.url(:medium) %>
+</p>
+
+<%= link_to 'Edit', edit_matinee_path(@matinee) %> |
+<%= link_to 'Back', matinees_path %>

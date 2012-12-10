@@ -2,7 +2,7 @@ class CreateAnimes < ActiveRecord::Migration
   def change
     create_table :animes do |t|
       t.string :title
-      t.string :type
+      t.string :serie_type
       t.string :eps
       t.boolean :finished
 

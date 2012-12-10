@@ -1,0 +1,27 @@
+<h1>Listing matinees</h1>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Organizer</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @matinees.each do |matinee| %>
+  <tr>
+    <td><%= matinee.name %></td>
+    <td><%= matinee.description %></td>
+    <td><%= matinee.organizer %></td>
+    <td><%= link_to 'Show', matinee %></td>
+    <td><%= link_to 'Edit', edit_matinee_path(matinee) %></td>
+    <td><%= link_to 'Destroy', matinee, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Matinee', new_matinee_path %>

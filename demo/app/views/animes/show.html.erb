@@ -6,8 +6,8 @@
 </p>
 
 <p>
-  <b>Type:</b>
-  <%= @anime.type %>
+  <b>Serie Type:</b>
+  <%= @anime.serie_type %>
 </p>
 
 <p>
@@ -18,6 +18,11 @@
 <p>
   <b>Finished:</b>
   <%= @anime.finished %>
+</p>
+
+<p>
+  <b>Cover:</b>
+  <%= image_tag @anime.cover.url(:medium) %>
 </p>
 
 

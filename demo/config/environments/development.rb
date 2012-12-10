@@ -34,4 +34,7 @@ Demo::Application.configure do
 
   # Expands the lines which load the assets
   config.assets.debug = true
+
+  #Paperclip config
+  Paperclip.options[:command_path] = "/usr/local/bin/"
 end

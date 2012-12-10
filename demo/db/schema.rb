@@ -11,11 +11,11 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121210213442) do
+ActiveRecord::Schema.define(:version => 20121210215206) do
 
   create_table "animes", :force => true do |t|
     t.string   "title"
-    t.string   "type"
+    t.string   "serie_type"
     t.string   "eps"
     t.boolean  "finished"
     t.datetime "created_at",         :null => false
@@ -24,6 +24,25 @@ ActiveRecord::Schema.define(:version => 20121210213442) do
     t.string   "cover_content_type"
     t.integer  "cover_file_size"
     t.datetime "cover_updated_at"
+  end
+
+  create_table "matinees", :force => true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.string   "organizer"
+    t.datetime "created_at",         :null => false
+    t.datetime "updated_at",         :null => false
+    t.string   "photo_file_name"
+    t.string   "photo_content_type"
+    t.integer  "photo_file_size"
+    t.datetime "photo_updated_at"
+  end
+
+  create_table "matinees_animes", :force => true do |t|
+    t.integer  "matinee_id"
+    t.integer  "anime_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
 end

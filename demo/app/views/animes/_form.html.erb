@@ -16,8 +16,8 @@
     <%= f.text_field :title %>
   </div>
   <div class="field">
-    <%= f.label :type %><br />
-    <%= f.text_field :type %>
+    <%= f.label :serie_type %><br />
+    <%= f.select :serie_type, ["Movie", "OVA", "TV Series"] %>
   </div>
   <div class="field">
     <%= f.label :eps %><br />
@@ -26,6 +26,10 @@
   <div class="field">
     <%= f.label :finished %><br />
     <%= f.check_box :finished %>
+  </div>
+  <div class="field">
+    <%= f.label :cover %><br />
+    <%= f.file_field :cover %>
   </div>
   <div class="actions">
     <%= f.submit %>
