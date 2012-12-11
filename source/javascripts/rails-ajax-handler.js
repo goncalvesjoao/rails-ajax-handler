@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.3.4 - 09 December, 2012
+ * rails-ajax-handler.js v0.3.5 - 09 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -149,7 +149,8 @@ function RailsAjaxHandler(options) {
       $(selector_to_animate).css('opacity', 0.35);
       $('.' + handler + '_particular_spinner').show();
     } else {
-      if (debug) window.console.log('TODO: Add a spinner for the whole page');
+      $(selector_to_animate).prepend('<div id="rah_body_spinner"></div>');
+      $('#rah_body_spinner').show();
     }
   }
   
@@ -171,7 +172,7 @@ function RailsAjaxHandler(options) {
       $('.' + handler + '_particular_spinner').remove();
       $('.' + handler + '_particular_clear_div').remove();
     } else {
-      if (debug) window.console.log('TODO: Remove the spinner for the whole page');
+      $('#rah_body_spinner').remove();
     }
   }
 
@@ -209,12 +210,13 @@ function RailsAjaxHandler(options) {
     if (debug) window.console.log('ajax_error');
   }
   
-  this.ajax_complete = function(object_to_handle, event, xhr, status) {
-    window[get_callback(object_to_handle, 'complete')](xhr, status);
-    spinner_animation_stop(object_to_handle);
-    window[get_callback(object_to_handle, 'ajax_stop')](xhr, status);
-    if (debug) window.console.log('ajax_complete');
-  }
+  // This event is not being called everytime it is expected  
+  // this.ajax_complete = function(object_to_handle, event, xhr, status) {
+  //   window[get_callback(object_to_handle, 'complete')](xhr, status);
+  //   spinner_animation_stop(object_to_handle);
+  //   window[get_callback(object_to_handle, 'ajax_stop')](xhr, status);
+  //   if (debug) window.console.log('ajax_complete');
+  // }
 
   this.bind_rails_ujs_ajax_events = function() {
     var objects_to_handle = ($('[data-remote][data-' + prefix + 'handler]').length > 0) ? $('[data-remote][data-' + prefix + 'handler]') : null;
@@ -232,9 +234,10 @@ function RailsAjaxHandler(options) {
         RailsAjaxHandler().ajax_error(this, event, xhr, status, error);
       });
 
-      objects_to_handle.live('ajax:complete', function(event, xhr, status) {
-        RailsAjaxHandler().ajax_complete(this, event, xhr, status);
-      });
+      // This event is not being called everytime it is expected
+      // objects_to_handle.live('ajax:complete', function(event, xhr, status) {
+      //   RailsAjaxHandler().ajax_complete(this, event, xhr, status);
+      // });
     }
     if (debug) window.console.log('bind_rails_ujs_ajax_events');
   }
