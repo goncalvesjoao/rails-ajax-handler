@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.3.5 - 09 December, 2012
+ * rails-ajax-handler.js v0.3.6 - 09 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -116,8 +116,8 @@ function RailsAjaxHandler(options) {
     var selector_to_animate = 'body';
     var animate = $(object_to_handle).data(prefix + 'animate')
     var replace = $(object_to_handle).data(prefix + 'replace');
-
-    if (animate != undefined && !animate) {
+    
+    if (animate != "start" && animate != "stop" && animate != true) {
       selector_to_animate = animate;
     } else if (replace != undefined) {
       selector_to_animate = replace;
@@ -128,7 +128,7 @@ function RailsAjaxHandler(options) {
 
   this.spinner_animation_start = function(object_to_handle) {
     var animate = $(object_to_handle).data(prefix + 'animate');
-    if (animate == undefined || animate == 'false') return;
+    if (animate == undefined || !animate || animate == 'stop') return;
 
     var handler = $(object_to_handle).data(prefix + 'handler');
     var container_html = '<' + spinner.wrapper_html + ' class="rah_general_spinner_container ' + handler + '_particular_spinner_container ' + spinner.wrapper_class + '" style="position: relative;" />';
@@ -152,11 +152,12 @@ function RailsAjaxHandler(options) {
       $(selector_to_animate).prepend('<div id="rah_body_spinner"></div>');
       $('#rah_body_spinner').show();
     }
+    if (debug) window.console.log('spinner_animation_start');
   }
   
   this.spinner_animation_stop = function(object_to_handle) {
     var animate = $(object_to_handle).data(prefix + 'animate');
-    if (animate == undefined || animate == 'false') return;
+    if (animate == undefined || !animate || animate == 'start') return;
 
     var handler = $(object_to_handle).data(prefix + 'handler');
     var selector_to_animate = get_selector_to_animate(object_to_handle);
@@ -174,6 +175,7 @@ function RailsAjaxHandler(options) {
     } else {
       $('#rah_body_spinner').remove();
     }
+    if (debug) window.console.log('spinner_animation_stop');
   }
 
   var get_callback = function(object_to_handle, callback_sufix) {
