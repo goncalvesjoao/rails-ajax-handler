@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v0.3.3 - 09 December, 2012
+ * rails-ajax-handler.js v0.3.4 - 09 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT ("expat" flavour) license.
@@ -117,7 +117,7 @@ function RailsAjaxHandler(options) {
     var animate = $(object_to_handle).data(prefix + 'animate')
     var replace = $(object_to_handle).data(prefix + 'replace');
 
-    if (animate != undefined && animate != 'true') {
+    if (animate != undefined && !animate) {
       selector_to_animate = animate;
     } else if (replace != undefined) {
       selector_to_animate = replace;
