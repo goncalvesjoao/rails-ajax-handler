@@ -1,0 +1,5 @@
+<table>
+  <%= render @animes %>
+</table>
+<br />
+<%= paginate @animes, remote: true, :theme => "animes" %>

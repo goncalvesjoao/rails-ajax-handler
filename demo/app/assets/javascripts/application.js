@@ -12,4 +12,8 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require_tree .
+//= require rails-ajax-handler
+
+jQuery(document).ready(function($) { RailsAjaxHandler({
+  debug: true
+}); });

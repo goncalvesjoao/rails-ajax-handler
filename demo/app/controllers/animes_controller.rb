@@ -3,9 +3,18 @@ class AnimesController < ApplicationController
   # GET /animes.json
   def index
     @animes = Anime.page(params[:page])
+    @data = { remote: true, type: "html", handler: "anime_list" }
 
+    sleep(1)
     respond_to do |format|
-      format.html # index.html.erb
+      format.html {
+        if request.xhr?
+          render :partial => "animes"
+          #render :nothing => true
+        else
+          render "index"
+        end
+      }
       format.json { render json: @animes }
     end
   end

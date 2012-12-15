@@ -1,4 +1,4 @@
-<h1>Listing animes</h1>
+<h1 id="teste">Listing animes</h1>
 
 <%= link_to 'New Anime', new_anime_path %>
 <br><br>
@@ -14,20 +14,8 @@
     <th></th>
     <th></th>
   </tr>
-
-<% @animes.each do |anime| %>
-  <tr>
-    <td><%= anime.title %></td>
-    <td><%= anime.serie_type %></td>
-    <td><%= anime.eps %></td>
-    <td><%= anime.finished %></td>
-    <td><%= image_tag anime.cover.url(:thumb) %></td>
-    <td><%= link_to 'Show', anime %></td>
-    <td><%= link_to 'Edit', edit_anime_path(anime) %></td>
-    <td><%= link_to 'Destroy', anime, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-  </tr>
-<% end %>
 </table>
 
-<br />
-<%= paginate @animes %>
+<div id="anime_list">
+  <%= render 'animes' %>
+</div>
