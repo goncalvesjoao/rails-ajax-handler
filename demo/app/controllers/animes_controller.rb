@@ -3,7 +3,7 @@ class AnimesController < ApplicationController
   # GET /animes.json
   def index
     @animes = Anime.page(params[:page])
-    @data = { remote: true, type: "html", handler: "anime_list" }
+    @data = { remote: true, type: "html", handler: "animes" }
 
     sleep(1)
     respond_to do |format|

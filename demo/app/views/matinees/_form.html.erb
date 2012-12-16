@@ -1,4 +1,4 @@
-<%= form_for(@matinee) do |f| %>
+<%= form_for(@matinee, html: { data: { remote: true, handler: true, show_errors: "matinee", type: "json" } }) do |f| %>
   <% if @matinee.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@matinee.errors.count, "error") %> prohibited this matinee from being saved:</h2>

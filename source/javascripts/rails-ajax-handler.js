@@ -1,23 +1,24 @@
 /*!
- * rails-ajax-handler.js v0.4.0 - 15 December, 2012
+ * rails-ajax-handler.js v0.4.1 - 16 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
- * Licensed under MIT ("expat" flavour) license.
+ * Licensed under MIT license.
  */
 
 function RailsAjaxHandler(options) {
   if (options == undefined) options = {};
 
   if (arguments.callee._singletonInstance) {
-    arguments.callee._singletonInstance.setOptions(options);
+    arguments.callee._singletonInstance.set_options(options);
     return arguments.callee._singletonInstance;
   } else {
     arguments.callee._singletonInstance = this;
   }
 
-  var debug = prefix = error_message = error_fields = spinner = defaults = null;
+  var debug, prefix, error_message, error_fields, spinner, defaults;
+  //this.debug = this.prefix = this.error_message = this.error_fields = this.spinner = this.defaults = null;
 
-  this.resetOptions = function() {
+  this.reset_options = function() {
     debug = false;
     prefix = '';
     error_message = {
@@ -32,40 +33,50 @@ function RailsAjaxHandler(options) {
     spinner = {
       html_tag: 'div',
       class: '',
-      min_zindex: 100,
+      min_zindex: 9999,
       wrapper_html: 'div',
       wrapper_class: ''
     }
     defaults = {
       action: "replace_html",
-      animation: true
+      animation: true,
+      auto_redirect: true
     }
   }
 
-  this.setOptions = function(_options) {
+  var get_option = function(_options, second_level, default_value) {
+    if (second_level) {
+      return (_options && _options[second_level] != undefined) ? _options[second_level] : default_value;
+    } else {
+      return (_options != undefined) ? _options : default_value;
+    }
+  }
+
+  this.set_options = function(_options) {
     var old_prefix = prefix;
 
-    debug = (_options["debug"] != undefined) ? _options["debug"] : debug;
-    prefix = _options["prefix"] || prefix;
+    debug = get_option(_options["debug"], null, debug);
+    prefix = get_option(_options["prefix"], null, prefix);
     error_message = {
-      wrapper_html: (_options["error_message"] && _options["error_message"]["wrapper_html"]) || error_message.wrapper_html,
-      wrapper_class: (_options["error_message"] && _options["error_message"]["wrapper_class"]) || error_message.wrapper_class
+      wrapper_html: get_option(_options["error_message"], "wrapper_html", error_message.wrapper_html),
+      wrapper_class: get_option(_options["error_message"], "wrapper_class", error_message.wrapper_class)
     }
     error_fields = {
-      wrapper_html: (_options["error_fields"] && _options["error_fields"]["wrapper_html"]) || error_fields.wrapper_html,
-      wrapper_class: (_options["error_fields"] && _options["error_fields"]["wrapper_class"]) || error_fields.wrapper_class,
-      wrap: (_options["error_fields"] && _options["error_fields"]["wrap"] != undefined) ? _options["error_fields"]["wrap"] : error_fields.wrap
+      wrapper_html: get_option(_options["error_fields"], "wrapper_html", error_fields.wrapper_html),
+      wrapper_class: get_option(_options["error_fields"], "wrapper_class", error_fields.wrapper_class),
+      wrap: get_option(_options["error_fields"], "wrap", error_fields.wrap)
     }
     spinner = {
-      html_tag: (_options["spinner"] && _options["spinner"]["html_tag"]) || spinner.html_tag,
-      class: (_options["spinner"] && _options["spinner"]["class"]) || spinner.class,
-      min_zindex: (_options["spinner"] && _options["spinner"]["min_zindex"] != undefined) ? _options["spinner"]["min_zindex"] : spinner.min_zindex,
-      wrapper_html: (_options["spinner"] && _options["spinner"]["wrapper_html"]) || spinner.wrapper_html,
-      wrapper_class: (_options["spinner"] && _options["spinner"]["wrapper_class"]) || spinner.wrapper_class
+      html_tag: get_option(_options["spinner"], "html_tag", spinner.html_tag),
+      class: get_option(_options["spinner"], "class", spinner.class),
+      min_zindex: get_option(_options["spinner"], "min_zindex", spinner.min_zindex),
+      wrapper_html: get_option(_options["spinner"], "wrapper_html", spinner.wrapper_html),
+      wrapper_class: get_option(_options["spinner"], "wrapper_class", spinner.wrapper_class)
     }
     defaults = {
-      action: (_options["defaults"] && _options["defaults"]["action"] != undefined) ? _options["defaults"]["action"] : defaults.action,
-      animation: (_options["defaults"] && _options["defaults"]["animation"] != undefined) ? _options["defaults"]["animation"] : defaults.animation,
+      action: get_option(_options["defaults"], "action", defaults.action),
+      animation: get_option(_options["defaults"], "animation", defaults.animation),
+      auto_redirect: get_option(_options["defaults"], "auto_redirect", defaults.auto_redirect),
     }
 
     if (old_prefix != prefix) bind_rails_ujs_ajax_events();
@@ -178,22 +189,16 @@ function RailsAjaxHandler(options) {
       if (target[0] != "#" && target[0] != ".") target = '#' + target;
     }
 
-    var action = get_data(object_to_handle, 'action', defaults.action);
-    var animation = get_data(object_to_handle, 'animation', defaults.animation);
-    var animation_target = get_data(object_to_handle, 'animation-target', target || 'body');
-    var show_errors = get_data(object_to_handle, 'show-errors', false);
-    var type = get_data(object_to_handle, 'type', 'js');
-
-    
     return {
-      handler: handler,
       target: target,
-      action: action,
-      animation: animation,
-      animation_target: animation_target,
+      handler: handler,
       object_to_handle: object_to_handle,
-      show_errors: show_errors,
-      type: type
+      type: get_data(object_to_handle, 'type', 'js'),
+      action: get_data(object_to_handle, 'action', defaults.action),
+      show_errors: get_data(object_to_handle, 'show-errors', false),
+      animation: get_data(object_to_handle, 'animation', defaults.animation),
+      animation_target: get_data(object_to_handle, 'animation-target', target || 'body'),
+      auto_redirect: get_data(object_to_handle, 'auto-redirect', defaults.auto_redirect)
     }
   }
 
@@ -206,6 +211,7 @@ function RailsAjaxHandler(options) {
   }
 
   this.ajax_success = function(data_to_handle, event, data, status, xhr) {
+    var skip_animation = false;
     if (data_to_handle.type == 'html' && data_to_handle.target != undefined) {
       if (data_to_handle.action == 'replace_html') {
         $(data_to_handle.target).html(data);
@@ -216,10 +222,17 @@ function RailsAjaxHandler(options) {
       } else if (data_to_handle.action == 'prepend') {
         $(data_to_handle.target).prepend(data);
       }
-      if (debug) window.console.log('action: ' + data_to_handle.action);
+      if (debug) window.console.log('html action: ' + data_to_handle.action);
+    }
+    if (data_to_handle.type == 'json' && data_to_handle.auto_redirect) {
+      if (xhr.getResponseHeader('Location')) {
+        window.location.href = xhr.getResponseHeader('Location');
+        skip_animation = true;
+        if (debug) window.console.log('redirect to: ' + xhr.getResponseHeader('Location'));
+      }
     }
     window[get_callback(data_to_handle, 'success')](data, status, xhr);
-    spinner_animation_stop(data_to_handle);
+    if (!skip_animation) spinner_animation_stop(data_to_handle);
     window[get_callback(data_to_handle, 'ajax_stop')](data, status, xhr);
     if (debug) window.console.log('function: ajax_success');
   }
@@ -254,8 +267,8 @@ function RailsAjaxHandler(options) {
     if (debug) window.console.log('function: bind_rails_ujs_ajax_events');
   }
 
-  this.resetOptions();
-  this.setOptions(options);
+  this.reset_options();
+  this.set_options(options);
   this.bind_rails_ujs_ajax_events();
 } // RailsAjaxHandler
 

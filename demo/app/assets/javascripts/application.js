@@ -14,6 +14,28 @@
 //= require jquery_ujs
 //= require rails-ajax-handler
 
-jQuery(document).ready(function($) { RailsAjaxHandler({
-  debug: true
-}); });
+// jQuery(document).ready(function($) { RailsAjaxHandler({
+//   debug: true,
+//   prefix: "ajax",
+//   error_message: {
+//     wrapper_class: "teste2",
+//     wrapper_html: "ol"
+//   },
+//   error_fields: {
+//     wrap: false,
+//     wrapper_html: "li",
+//     wrapper_class: "test4"
+//   },
+//   spinner: {
+//     class: "teste",
+//     html_tag: "span",
+//     min_zindex: 10,
+//     wrapper_class: "dass",
+//     wrapper_html: "p"
+//   },
+//   defaults: {
+//     action: "replace_with",
+//     animation: false,
+//     auto_redirect: false
+//   }
+// }); });

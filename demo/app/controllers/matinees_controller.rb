@@ -41,7 +41,7 @@ class MatineesController < ApplicationController
   # POST /matinees.json
   def create
     @matinee = Matinee.new(params[:matinee])
-
+    sleep(1)
     respond_to do |format|
       if @matinee.save
         format.html { redirect_to @matinee, notice: 'Matinee was successfully created.' }
