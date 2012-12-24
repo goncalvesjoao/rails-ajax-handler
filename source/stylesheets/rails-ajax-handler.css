@@ -7,7 +7,9 @@
 	display: none;
 	background: url('/assets/spinner_24x24.gif') no-repeat center center;
 }
-
+.rah_general_spinner_container {
+  position: relative;
+}
 #rah_body_spinner {
   position: absolute;
   top: 0;
