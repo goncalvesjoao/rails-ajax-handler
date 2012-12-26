@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.2 - 26 December, 2012
+ * rails-ajax-handler.js v1.2.1 - 26 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -214,7 +214,7 @@
     var target = get_data(object_to_handle, 'target', handler);
     if (handler != undefined) {
       if (handler[0] == "#" || handler[0] == ".") handler = handler.substr(1);
-      if (target[0] != "#" && target[0] != ".") target = '#' + target;
+      if (target != 'body' && target[0] != "#" && target[0] != ".") target = '#' + target;
     }
 
     return {
