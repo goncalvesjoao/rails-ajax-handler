@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.0b - 24 December, 2012
+ * rails-ajax-handler.js v1.0.1 - 26 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -95,7 +95,7 @@
       $.RailsAjaxHandler.spinner_animation_stop(data_to_handle);
       window[get_callback(data_to_handle, 'ajax_stop')](xhr, status, error);
 
-      rah_debuglog('function: ajax_error');
+      rah_debug('function: ajax_error');
     },
 
     spinner_animation_start: function(data_to_handle) {
