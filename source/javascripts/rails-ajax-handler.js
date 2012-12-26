@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.0.1 - 26 December, 2012
+ * rails-ajax-handler.js v1.1 - 26 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -27,24 +27,28 @@
       var rah_prefix = $.RailsAjaxHandler.settings.prefix;
 
       if (old_prefix != rah_prefix) {
-        var objects_to_handle = ($('[data-remote][data-' + rah_prefix + 'handler]').length > 0) ? $('[data-remote][data-' + rah_prefix + 'handler]') : null;
+        var selector = '[data-remote][data-' + rah_prefix + 'handler]';
+        if (old_prefix != undefined) $(document).off('.rails-ajax-handler');
         
-        if (objects_to_handle) {
-          objects_to_handle.live('ajax:beforeSend', function(event, xhr, settings) {
-            $.RailsAjaxHandler.ajax_beforesend(get_data_to_handle(this), event, xhr, settings);
-          });
-          
-          objects_to_handle.live('ajax:success', function(event, data, status, xhr) {
-            $.RailsAjaxHandler.ajax_success(get_data_to_handle(this), event, data, status, xhr);
-          });
-          
-          objects_to_handle.live('ajax:error', function(event, xhr, status, error) {
-            $.RailsAjaxHandler.ajax_error(get_data_to_handle(this), event, xhr, status, error);
-          });
-        }
+        $(document).on('ajax:beforeSend.rails-ajax-handler', selector, function(event, xhr, settings) {
+          $.RailsAjaxHandler.ajax_beforesend(get_data_to_handle(this), event, xhr, settings);
+        });
+        
+        $(document).on('ajax:success.rails-ajax-handler', selector, function(event, data, status, xhr) {
+          $.RailsAjaxHandler.ajax_success(get_data_to_handle(this), event, data, status, xhr);
+        });
+        
+        $(document).on('ajax:error.rails-ajax-handler', selector, function(event, xhr, status, error) {
+          $.RailsAjaxHandler.ajax_error(get_data_to_handle(this), event, xhr, status, error);
+        });
       }
 
       rah_debug('function: bind_rails_ujs_ajax_events');
+    },
+
+    destroy: function() {
+      $(document).off('.rails-ajax-handler');
+      $.RailsAjaxHandler.settings = {};
     },
 
     ajax_beforesend: function(data_to_handle, event, xhr, settings) {
