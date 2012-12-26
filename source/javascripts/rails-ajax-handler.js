@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.1 - 26 December, 2012
+ * rails-ajax-handler.js v1.2 - 26 December, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -21,7 +21,9 @@
         action: "replace_html",
         spinner_wrapper: '<div />',
         error_message_wrapper: '<span class="field_with_errors" />',
-        error_fields_wrapper: '<div class="field_with_errors" />'
+        error_fields_wrapper: '<div class="field_with_errors" />',
+        animate_target_begin: function (animation_target) { $(animation_target).css('opacity', 0.35); },
+        animate_target_end: function (animation_target) { $(animation_target).fadeTo('fast', 1); }
       }
       $.RailsAjaxHandler.settings = $.extend({}, defaults, options);
       var rah_prefix = $.RailsAjaxHandler.settings.prefix;
@@ -54,7 +56,7 @@
     ajax_beforesend: function(data_to_handle, event, xhr, settings) {
       $.RailsAjaxHandler.clear_error_messages();
       window[get_callback(data_to_handle, 'beforesend')](xhr, settings);
-      $.RailsAjaxHandler.spinner_animation_start(data_to_handle);
+      $.RailsAjaxHandler.spinner_animation_begin(data_to_handle);
       window[get_callback(data_to_handle, 'ajax_start')](xhr, settings);
 
       rah_debug('function: ajax_beforesend');
@@ -66,7 +68,7 @@
         if (data_to_handle.action == 'replace_html') {
           $(data_to_handle.target).html(data);
         } else if (data_to_handle.action == 'replace_with') {
-          $.RailsAjaxHandler.spinner_animation_stop(data_to_handle);
+          $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
           $(data_to_handle.target).replaceWith(data);
           skip_animation = true;
         } else if (data_to_handle.action == 'append') {
@@ -84,7 +86,7 @@
         }
       }
       window[get_callback(data_to_handle, 'success')](data, status, xhr);
-      if (!skip_animation) $.RailsAjaxHandler.spinner_animation_stop(data_to_handle);
+      if (!skip_animation) $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
       window[get_callback(data_to_handle, 'ajax_stop')](data, status, xhr);
 
       rah_debug('function: ajax_success');
@@ -96,13 +98,13 @@
         $.RailsAjaxHandler.show_error_messages(data_to_handle.show_errors, data.errors != null ? data.errors : data);
       }
       window[get_callback(data_to_handle, 'error')](xhr, status, error);
-      $.RailsAjaxHandler.spinner_animation_stop(data_to_handle);
+      $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
       window[get_callback(data_to_handle, 'ajax_stop')](xhr, status, error);
 
       rah_debug('function: ajax_error');
     },
 
-    spinner_animation_start: function(data_to_handle) {
+    spinner_animation_begin: function(data_to_handle) {
       if (!data_to_handle.animation || data_to_handle.animation == 'stop') return;
       var animation_target_obj = $(data_to_handle.animation_target);
 
@@ -112,7 +114,7 @@
         var clear_div = '<div class="' + data_to_handle.handler + '_particular_clear_div" style="clear:both;"></div>';
 
         animation_target_obj.each(function(index) { $(this).wrap(wrapper).before(spinner).after(clear_div); });
-        animation_target_obj.css('opacity', 0.35);
+        $.RailsAjaxHandler.settings.animate_target_begin(data_to_handle.animation_target);
         spinner.show();
       } else {
         var body_spinner = $($.RailsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
@@ -121,10 +123,10 @@
         body_spinner.show();
       }
 
-      rah_debug('function: spinner_animation_start');
+      rah_debug('function: spinner_animation_begin');
     },
     
-    spinner_animation_stop: function(data_to_handle) {
+    spinner_animation_end: function(data_to_handle) {
       if (!data_to_handle.animation || data_to_handle.animation == 'start') return;
 
       if (data_to_handle.animation_target != 'body') {
@@ -134,14 +136,14 @@
           }
         });
 
-        $(data_to_handle.animation_target).fadeTo('fast', 1);
+        $.RailsAjaxHandler.settings.animate_target_end(data_to_handle.animation_target);
         $('.' + data_to_handle.handler + '_particular_spinner').remove();
         $('.' + data_to_handle.handler + '_particular_clear_div').remove();
       } else {
         $('#rah_body_spinner').remove();
       }
 
-      rah_debug('function: spinner_animation_stop');
+      rah_debug('function: spinner_animation_end');
     },
 
     clear_error_messages: function() {
