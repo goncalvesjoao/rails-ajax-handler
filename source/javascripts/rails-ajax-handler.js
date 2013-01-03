@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.2.1 - 26 December, 2012
+ * rails-ajax-handler.js v1.4b - 3 January, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -96,6 +96,8 @@
       if (data_to_handle.type == 'json' && data_to_handle.show_errors) {
         var data = $.parseJSON(xhr.responseText);
         $.RailsAjaxHandler.show_error_messages(data_to_handle.show_errors, data.errors != null ? data.errors : data);
+      } else if (data_to_handle.type == 'html' && data_to_handle.requester != undefined) {
+        $(data_to_handle.requester).html(xhr.responseText);
       }
       window[get_callback(data_to_handle, 'error')](xhr, status, error);
       $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
@@ -106,21 +108,10 @@
 
     spinner_animation_begin: function(data_to_handle) {
       if (!data_to_handle.animation || data_to_handle.animation == 'stop') return;
-      var animation_target_obj = $(data_to_handle.animation_target);
-
-      if (data_to_handle.animation_target != 'body') {
-        var wrapper = $($.RailsAjaxHandler.settings.spinner_wrapper).addClass('rah_general_spinner_container ' + data_to_handle.handler + '_particular_spinner_container');
-        var spinner = $($.RailsAjaxHandler.settings.spinner).addClass('rah_general_spinner ' + data_to_handle.handler + '_particular_spinner');
-        var clear_div = '<div class="' + data_to_handle.handler + '_particular_clear_div" style="clear:both;"></div>';
-
-        animation_target_obj.each(function(index) { $(this).wrap(wrapper).before(spinner).after(clear_div); });
-        $.RailsAjaxHandler.settings.animate_target_begin(data_to_handle.animation_target);
-        spinner.show();
-      } else {
-        var body_spinner = $($.RailsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
-
-        animation_target_obj.prepend(body_spinner);
-        body_spinner.show();
+      
+      spinner_animation_start(data_to_handle.animation_target, data_to_handle.handler);
+      if (data_to_handle.animation_requester != data_to_handle.animation_target) {
+        spinner_animation_start(data_to_handle.animation_requester, data_to_handle.handler);
       }
 
       rah_debug('function: spinner_animation_begin');
@@ -129,18 +120,9 @@
     spinner_animation_end: function(data_to_handle) {
       if (!data_to_handle.animation || data_to_handle.animation == 'start') return;
 
-      if (data_to_handle.animation_target != 'body') {
-        $(data_to_handle.animation_target).each(function(index) {
-          if ($(this).parent().hasClass('rah_general_spinner_container')) {
-            $(this).unwrap();
-          }
-        });
-
-        $.RailsAjaxHandler.settings.animate_target_end(data_to_handle.animation_target);
-        $('.' + data_to_handle.handler + '_particular_spinner').remove();
-        $('.' + data_to_handle.handler + '_particular_clear_div').remove();
-      } else {
-        $('#rah_body_spinner').remove();
+      spinner_animation_end(data_to_handle.animation_target, data_to_handle.handler);
+      if (data_to_handle.animation_requester != data_to_handle.animation_target) {
+        spinner_animation_end(data_to_handle.animation_requester, data_to_handle.handler);
       }
 
       rah_debug('function: spinner_animation_end');
@@ -212,21 +194,67 @@
     var handler = get_data(object_to_handle, 'handler');
     if (handler == true) handler = $(object_to_handle).attr('id');
     var target = get_data(object_to_handle, 'target', handler);
+    var requester = get_data(object_to_handle, 'requester', target);
+    
     if (handler != undefined) {
       if (handler[0] == "#" || handler[0] == ".") handler = handler.substr(1);
       if (target != 'body' && target[0] != "#" && target[0] != ".") target = '#' + target;
+      if (requester != 'body' && requester[0] != "#" && requester[0] != ".") requester = '#' + requester;
     }
 
     return {
       target: target,
       handler: handler,
+      requester: requester,
       object_to_handle: object_to_handle,
       type: get_data(object_to_handle, 'type', 'js'),
       action: get_data(object_to_handle, 'action', $.RailsAjaxHandler.settings.action),
       show_errors: get_data(object_to_handle, 'show-errors', false),
       animation: get_data(object_to_handle, 'animation', $.RailsAjaxHandler.settings.animation),
       animation_target: get_data(object_to_handle, 'animation-target', target || 'body'),
+      animation_requester: get_data(object_to_handle, 'animation-requester', requester || 'body'),
       auto_redirect: get_data(object_to_handle, 'auto-redirect', $.RailsAjaxHandler.settings.auto_redirect)
+    }
+  }
+
+  function spinner_animation_start(animation_target, handler) {
+    var animation_target_obj = $(animation_target);
+
+    if (animation_target != 'body') {
+      var wrapper = $($.RailsAjaxHandler.settings.spinner_wrapper).addClass('rah_general_spinner_container ' + handler + '_particular_spinner_container');
+      var spinner = $($.RailsAjaxHandler.settings.spinner).addClass('rah_general_spinner ' + handler + '_particular_spinner');
+      var clear_div = '<div class="' + handler + '_particular_clear_div" style="clear:both;"></div>';
+
+      animation_target_obj.each(function(index) {
+        if ($(this).css('position') == 'static') {
+          $(this).wrap(wrapper).before(spinner).after(clear_div);
+        } else {
+          $(this).append(spinner);
+        }
+      });
+      $.RailsAjaxHandler.settings.animate_target_begin(animation_target);
+      spinner.show();
+    } else {
+      var body_spinner = $($.RailsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
+
+      animation_target_obj.prepend(body_spinner);
+      body_spinner.show();
+    }
+  }
+
+  function spinner_animation_end(animation_target, handler) {
+    if (animation_target != 'body') {
+      $(animation_target).each(function(index) {
+        if ($(this).parent().hasClass('rah_general_spinner_container')) {
+          $(this).unwrap();
+        }
+      });
+
+      $.RailsAjaxHandler.settings.animate_target_end(animation_target);
+      $('.' + handler + '_particular_spinner').remove();
+      $('.' + handler + '_particular_clear_div').remove();
+    } else {
+      $('#rah_body_spinner').remove();
     }
   }
 
