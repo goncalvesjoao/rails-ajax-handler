@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.4b - 3 January, 2012
+ * rails-ajax-handler.js v1.5b - 14 January, 2012
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -33,15 +33,19 @@
         if (old_prefix != undefined) $(document).off('.rails-ajax-handler');
         
         $(document).on('ajax:beforeSend.rails-ajax-handler', selector, function(event, xhr, settings) {
-          $.RailsAjaxHandler.ajax_beforesend(get_data_to_handle(this), event, xhr, settings);
+          ajax_beforesend(get_data_to_handle(this), event, xhr, settings);
         });
         
         $(document).on('ajax:success.rails-ajax-handler', selector, function(event, data, status, xhr) {
-          $.RailsAjaxHandler.ajax_success(get_data_to_handle(this), event, data, status, xhr);
+          ajax_success(get_data_to_handle(this), event, data, status, xhr);
         });
         
         $(document).on('ajax:error.rails-ajax-handler', selector, function(event, xhr, status, error) {
-          $.RailsAjaxHandler.ajax_error(get_data_to_handle(this), event, xhr, status, error);
+          ajax_error(get_data_to_handle(this), event, xhr, status, error);
+        });
+
+        $(document).on('ajax:complete.rails-ajax-handler', selector, function(event, xhr, status) {
+          ajax_complete(get_data_to_handle(this), event, xhr, status);
         });
       }
 
@@ -52,80 +56,49 @@
       $(document).off('.rails-ajax-handler');
       $.RailsAjaxHandler.settings = {};
     },
-
-    ajax_beforesend: function(data_to_handle, event, xhr, settings) {
-      $.RailsAjaxHandler.clear_error_messages();
-      window[get_callback(data_to_handle, 'beforesend')](xhr, settings);
-      $.RailsAjaxHandler.spinner_animation_begin(data_to_handle);
-      window[get_callback(data_to_handle, 'ajax_start')](xhr, settings);
-
-      rah_debug('function: ajax_beforesend');
-    },
-
-    ajax_success: function(data_to_handle, event, data, status, xhr) {
-      var skip_animation = false;
-      if (data_to_handle.type == 'html' && data_to_handle.target != undefined) {
-        if (data_to_handle.action == 'replace_html') {
-          $(data_to_handle.target).html(data);
-        } else if (data_to_handle.action == 'replace_with') {
-          $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
-          $(data_to_handle.target).replaceWith(data);
-          skip_animation = true;
-        } else if (data_to_handle.action == 'append') {
-          $(data_to_handle.target).append(data);
-        } else if (data_to_handle.action == 'prepend') {
-          $(data_to_handle.target).prepend(data);
-        }
-        rah_debug('html action: ' + data_to_handle.action);
-      }
-      if (data_to_handle.type == 'json' && data_to_handle.auto_redirect) {
-        if (xhr.getResponseHeader('Location')) {
-          window.location.href = xhr.getResponseHeader('Location');
-          skip_animation = true;
-          rah_debug('redirect to: ' + xhr.getResponseHeader('Location'));
-        }
-      }
-      window[get_callback(data_to_handle, 'success')](data, status, xhr);
-      if (!skip_animation) $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
-      window[get_callback(data_to_handle, 'ajax_stop')](data, status, xhr);
-
-      rah_debug('function: ajax_success');
-    },
-
-    ajax_error: function(data_to_handle, event, xhr, status, error) {
-      if (data_to_handle.type == 'json' && data_to_handle.show_errors) {
-        var data = $.parseJSON(xhr.responseText);
-        $.RailsAjaxHandler.show_error_messages(data_to_handle.show_errors, data.errors != null ? data.errors : data);
-      } else if (data_to_handle.type == 'html' && data_to_handle.requester != undefined) {
-        $(data_to_handle.requester).html(xhr.responseText);
-      }
-      window[get_callback(data_to_handle, 'error')](xhr, status, error);
-      $.RailsAjaxHandler.spinner_animation_end(data_to_handle);
-      window[get_callback(data_to_handle, 'ajax_stop')](xhr, status, error);
-
-      rah_debug('function: ajax_error');
-    },
-
-    spinner_animation_begin: function(data_to_handle) {
-      if (!data_to_handle.animation || data_to_handle.animation == 'stop') return;
-      
-      spinner_animation_start(data_to_handle.animation_target, data_to_handle.handler);
-      if (data_to_handle.animation_requester != data_to_handle.animation_target) {
-        spinner_animation_start(data_to_handle.animation_requester, data_to_handle.handler);
-      }
-
-      rah_debug('function: spinner_animation_begin');
-    },
     
-    spinner_animation_end: function(data_to_handle) {
-      if (!data_to_handle.animation || data_to_handle.animation == 'start') return;
+    spinner_animation_start: function(animation_target) {
+      var animation_target_obj = $(animation_target);
+      var animation_target_class = animation_target[0] == '.' || animation_target[0] == '#' ? animation_target.substr(1) : animation_target;
 
-      spinner_animation_end(data_to_handle.animation_target, data_to_handle.handler);
-      if (data_to_handle.animation_requester != data_to_handle.animation_target) {
-        spinner_animation_end(data_to_handle.animation_requester, data_to_handle.handler);
+      if (animation_target != 'body') {
+        var wrapper = $($.RailsAjaxHandler.settings.spinner_wrapper).addClass('rah_general_spinner_container ' + animation_target_class + '_particular_spinner_container');
+        var spinner = $($.RailsAjaxHandler.settings.spinner).addClass('rah_general_spinner ' + animation_target_class + '_particular_spinner');
+        var clear_div = '<div class="' + animation_target_class + '_particular_clear_div" style="clear:both;"></div>';
+
+        animation_target_obj.each(function(index) {
+          if ($(this).css('position') == 'static') {
+            $(this).wrap(wrapper).before(spinner).after(clear_div);
+          } else {
+            $(this).append(spinner);
+          }
+        });
+        $.RailsAjaxHandler.settings.animate_target_begin(animation_target);
+        spinner.show();
+      } else {
+        var body_spinner = $($.RailsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
+
+        animation_target_obj.prepend(body_spinner);
+        body_spinner.show();
       }
+    },
 
-      rah_debug('function: spinner_animation_end');
+    spinner_animation_end: function(animation_target) {
+      var animation_target_class = animation_target[0] == '.' || animation_target[0] == '#' ? animation_target.substr(1) : animation_target;
+
+      if (animation_target != 'body') {
+        $(animation_target).each(function(index) {
+          if ($(this).parent().hasClass('rah_general_spinner_container')) {
+            $(this).unwrap();
+          }
+        });
+
+        $.RailsAjaxHandler.settings.animate_target_end(animation_target);
+        $('.' + animation_target_class + '_particular_spinner').remove();
+        $('.' + animation_target_class + '_particular_clear_div').remove();
+      } else {
+        $('#rah_body_spinner').remove();
+      }
     },
 
     clear_error_messages: function() {
@@ -164,6 +137,86 @@
 
   }
 
+  function ajax_beforesend(data_to_handle, event, xhr, settings) {
+    $.RailsAjaxHandler.clear_error_messages();
+    eval(get_callback(data_to_handle, 'beforesend') + '(xhr, settings)');
+    spinner_animation_start(data_to_handle);
+    eval(get_callback(data_to_handle, 'ajax_start') + '(xhr, settings)');
+
+    rah_debug('function: ajax_beforesend');
+  }
+
+  function ajax_success(data_to_handle, event, data, status, xhr) {
+    var skip_animation = false;
+    if (data_to_handle.type == 'html' && data_to_handle.target != undefined) {
+      if (data_to_handle.action == 'replace_html') {
+        $(data_to_handle.target).html(data);
+      } else if (data_to_handle.action == 'replace_with') {
+        spinner_animation_end(data_to_handle);
+        $(data_to_handle.target).replaceWith(data);
+        skip_animation = true;
+      } else if (data_to_handle.action == 'append') {
+        $(data_to_handle.target).append(data);
+      } else if (data_to_handle.action == 'prepend') {
+        $(data_to_handle.target).prepend(data);
+      }
+      rah_debug('html action: ' + data_to_handle.action);
+    }
+    //if (data_to_handle.type == 'json' && data_to_handle.auto_redirect) {
+    if (data_to_handle.auto_redirect) {
+      if (xhr.getResponseHeader('Location')) {
+        window.location.href = xhr.getResponseHeader('Location');
+        skip_animation = true;
+        rah_debug('redirect to: ' + xhr.getResponseHeader('Location'));
+      }
+    }
+    eval(get_callback(data_to_handle, 'success') + '(data, status, xhr)');
+    if (!skip_animation) spinner_animation_end(data_to_handle);
+    eval(get_callback(data_to_handle, 'ajax_stop') + '(data, status, xhr)');
+
+    rah_debug('function: ajax_success');
+  }
+
+  function ajax_error(data_to_handle, event, xhr, status, error) {
+    if (data_to_handle.type == 'json' && data_to_handle.show_errors) {
+      var data = $.parseJSON(xhr.responseText);
+      $.RailsAjaxHandler.show_error_messages(data_to_handle.show_errors, data.errors != null ? data.errors : data);
+    } else if (data_to_handle.type == 'html' && data_to_handle.requester != undefined) {
+      $(data_to_handle.requester).html(xhr.responseText);
+    }
+    eval(get_callback(data_to_handle, 'error') + '(xhr, status, error)');
+    spinner_animation_end(data_to_handle);
+    eval(get_callback(data_to_handle, 'ajax_stop') + '(xhr, status, error)');
+
+    rah_debug('function: ajax_error');
+  }
+
+  function ajax_complete(data_to_handle, event, xhr, status) {
+    rah_debug('function: ajax_complete');
+  }
+
+  function spinner_animation_start(data_to_handle) {
+    if (!data_to_handle.animation || data_to_handle.animation == 'stop') return;
+    
+    $.RailsAjaxHandler.spinner_animation_start(data_to_handle.animation_target);
+    if (data_to_handle.animation_requester != data_to_handle.animation_target) {
+      $.RailsAjaxHandler.spinner_animation_start(data_to_handle.animation_requester);
+    }
+
+    rah_debug('function: spinner_animation_begin');
+  }
+  
+  function spinner_animation_end(data_to_handle) {
+    if (!data_to_handle.animation || data_to_handle.animation == 'start') return;
+
+    $.RailsAjaxHandler.spinner_animation_end(data_to_handle.animation_target);
+    if (data_to_handle.animation_requester != data_to_handle.animation_target) {
+      $.RailsAjaxHandler.spinner_animation_end(data_to_handle.animation_requester);
+    }
+
+    rah_debug('function: spinner_animation_end');
+  }
+
   function rah_debug(message) {
     if ($.RailsAjaxHandler.settings.debug) {
       window.console.log(message);
@@ -172,7 +225,7 @@
   
   function get_callback(data_to_handle, callback_sufix) {
     var default_callback = data_to_handle.handler + '_' + callback_sufix;
-    return (window[default_callback] != undefined) ? default_callback : 'focus';
+    return (eval("typeof " + default_callback + " == 'function'")) ? default_callback : 'focus';
   }
 
   function get_data(object_to_handle, suffix, default_value) {
@@ -214,47 +267,6 @@
       animation_target: get_data(object_to_handle, 'animation-target', target || 'body'),
       animation_requester: get_data(object_to_handle, 'animation-requester', requester || 'body'),
       auto_redirect: get_data(object_to_handle, 'auto-redirect', $.RailsAjaxHandler.settings.auto_redirect)
-    }
-  }
-
-  function spinner_animation_start(animation_target, handler) {
-    var animation_target_obj = $(animation_target);
-
-    if (animation_target != 'body') {
-      var wrapper = $($.RailsAjaxHandler.settings.spinner_wrapper).addClass('rah_general_spinner_container ' + handler + '_particular_spinner_container');
-      var spinner = $($.RailsAjaxHandler.settings.spinner).addClass('rah_general_spinner ' + handler + '_particular_spinner');
-      var clear_div = '<div class="' + handler + '_particular_clear_div" style="clear:both;"></div>';
-
-      animation_target_obj.each(function(index) {
-        if ($(this).css('position') == 'static') {
-          $(this).wrap(wrapper).before(spinner).after(clear_div);
-        } else {
-          $(this).append(spinner);
-        }
-      });
-      $.RailsAjaxHandler.settings.animate_target_begin(animation_target);
-      spinner.show();
-    } else {
-      var body_spinner = $($.RailsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
-
-      animation_target_obj.prepend(body_spinner);
-      body_spinner.show();
-    }
-  }
-
-  function spinner_animation_end(animation_target, handler) {
-    if (animation_target != 'body') {
-      $(animation_target).each(function(index) {
-        if ($(this).parent().hasClass('rah_general_spinner_container')) {
-          $(this).unwrap();
-        }
-      });
-
-      $.RailsAjaxHandler.settings.animate_target_end(animation_target);
-      $('.' + handler + '_particular_spinner').remove();
-      $('.' + handler + '_particular_clear_div').remove();
-    } else {
-      $('#rah_body_spinner').remove();
     }
   }
 
