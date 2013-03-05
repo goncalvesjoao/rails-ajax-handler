@@ -42,3 +42,13 @@ Submitting a form through **ajax**, in **json** format:
 This will add a spinner animation arround the form element preventing it from being clicked and will either:
 - redirect the browser to `render json: @user, location: users_path` the **url** that came in the **location** header response;
 - or show any errors returned on the json object, just like a **form_for** would: wrapping the target fields in a `<div class="field_with_errors" />`.
+
+
+<br/>
+<major>.<minor>.<patch>
+
+And constructed with the following guidelines:
+
+Breaking backwards compatibility bumps the major
+New additions without breaking backwards compatibility bumps the minor
+Bug fixes and misc changes bump the patch
