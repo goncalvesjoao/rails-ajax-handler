@@ -1,5 +1,5 @@
 /*!
- * rails-ajax-handler.js v1.7.1 - 11 March, 2012
+ * rails-ajax-handler.js v1.7.6 - 9 Setember, 2013
  * By João Gonçalves (http://goncalvesjoao.github.com)
  * Hosted on https://github.com/goncalvesjoao/rails-ajax-handler
  * Licensed under MIT license.
@@ -13,12 +13,14 @@
     init: function(options) {
       var oldPrefix = $.railsAjaxHandler.settings["prefix"];
       var defaults = {
+        timeout: null,
+        timeoutDelay: 250,
         prefix: '',
         debug: false,
         animation: true,
         spinner: '<div />',
         autoRedirect: true,
-        action: "replace_html",
+        action: "replaceHtml",
         spinnerWrapper: '<div />',
         errorMessageWrapper: '<span class="field_with_errors" />',
         errorFieldsWrapper: '<div class="field_with_errors" />'
@@ -34,52 +36,60 @@
         $(document).off('.rails-ajax-handler');
         
         $(document).on('ajax:beforeSend.rails-ajax-handler', ajaxSelector, function(event, xhr, settings) {
-          $.railsAjaxHandler.ajaxBeforesend(xhr, settings, $.railsAjaxHandler.getDataToHandle(this), event);
+          $.railsAjaxHandler.ajaxBeforesend(xhr, settings, $.railsAjaxHandler.getDataToHandle(this), event, this);
         });
         
         $(document).on('ajax:success.rails-ajax-handler', ajaxSelector, function(event, data, status, xhr) {
-          $.railsAjaxHandler.ajaxSuccess(data, status, xhr, $.railsAjaxHandler.getDataToHandle(this), event);
+          $.railsAjaxHandler.ajaxSuccess(data, status, xhr, $.railsAjaxHandler.getDataToHandle(this), event, this);
         });
         
         $(document).on('ajax:error.rails-ajax-handler', ajaxSelector, function(event, xhr, status, error) {
-          $.railsAjaxHandler.ajaxError(xhr, status, error, $.railsAjaxHandler.getDataToHandle(this), event);
+          $.railsAjaxHandler.ajaxError(xhr, status, error, $.railsAjaxHandler.getDataToHandle(this), event, this);
         });
 
         $(document).on('ajax:complete.rails-ajax-handler', ajaxSelector, function(event, xhr, status) {
-          $.railsAjaxHandler.ajaxComplete(xhr, status, $.railsAjaxHandler.getDataToHandle(this), event);
+          $.railsAjaxHandler.ajaxComplete(xhr, status, $.railsAjaxHandler.getDataToHandle(this), event, this);
         });
 
         $(document).on('click.rails-ajax-handler', buttonSelector, function(event) {
           var $this = $(this);
-          var type = ($this.data('method') != undefined) ? $this.data('method') : 'get';
-          var dataType = ($this.data('type') != undefined) ? $this.data('type') : 'script';
-          var url = $this.data('href');
 
-          if (url != undefined) {
-            $.ajax({
-              url: url,
-              type: type,
-              dataType: dataType,
-              beforeSend: function(jqXHR, settings) {
-                $.railsAjaxHandler.ajaxBeforesend(jqXHR, settings, $.railsAjaxHandler.getDataToHandle($this), event);
-              },
-              success: function(data, textStatus, jqXHR) {
-                $.railsAjaxHandler.ajaxSuccess(data, textStatus, jqXHR, $.railsAjaxHandler.getDataToHandle($this), event);
-              },
-              error: function(jqXHR, textStatus, errorThrown) {
-                $.railsAjaxHandler.ajaxError(jqXHR, textStatus, errorThrown, $.railsAjaxHandler.getDataToHandle($this), event);
-              },
-              complete: function(jqXHR, textStatus) {
-                $.railsAjaxHandler.ajaxComplete(jqXHR, textStatus, $.railsAjaxHandler.getDataToHandle($this), event);
-              }
-            });
-          }
+          clearTimeout($.railsAjaxHandler.settings.timeout); //timeout to prevent multiple clicks. Only last click do the call
+          $.railsAjaxHandler.settings.timeout = setTimeout(function(){
+
+            var type = ($this.data('method') != undefined) ? $this.data('method') : 'get';
+            var dataType = ($this.data('type') != undefined) ? $this.data('type') : 'script';
+            var url = $this.data('href');
+
+            if (url != undefined) {
+              $.ajax({
+                url: url,
+                type: type,
+                dataType: dataType,
+                beforeSend: function(jqXHR, settings) {
+                  $.railsAjaxHandler.ajaxBeforesend(jqXHR, settings, $.railsAjaxHandler.getDataToHandle($this[0]), event, $this[0]);
+                },
+                success: function(data, textStatus, jqXHR) {
+                  $.railsAjaxHandler.ajaxSuccess(data, textStatus, jqXHR, $.railsAjaxHandler.getDataToHandle($this[0]), event, $this[0]);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                  $.railsAjaxHandler.ajaxError(jqXHR, textStatus, errorThrown, $.railsAjaxHandler.getDataToHandle($this[0]), event, $this[0]);
+                },
+                complete: function(jqXHR, textStatus) {
+                  $.railsAjaxHandler.ajaxComplete(jqXHR, textStatus, $.railsAjaxHandler.getDataToHandle($this[0]), event, $this[0]);
+                }
+              });
+            }
+
+          }, $.railsAjaxHandler.settings.timeoutDelay);
+
+          event.stopPropagation();        
         });
       }
 
       _rahDebug('function: bind_rails_ujs_ajax_events');
     },
-    
+
     targetAnimationStart: function(animationTarget) {
       $(animationTarget).css('opacity', 0.35);
     },
@@ -89,7 +99,7 @@
     },
 
     spinnerAnimationStart: function(animationTarget) {
-      var animationTarget_obj = $(animationTarget);
+      var $animationTarget = $(animationTarget);
       var animationTargetClass = animationTarget.replace(/[.#]/g, '_');
 
       if (animationTarget != 'body') {
@@ -97,7 +107,7 @@
         var spinner = $($.railsAjaxHandler.settings.spinner).addClass('rah_general_spinner ' + animationTargetClass + '_particular_spinner');
         var clear_div = '<div class="' + animationTargetClass + '_particular_clear_div" style="clear:both;"></div>';
 
-        animationTarget_obj.each(function(index) {
+        $animationTarget.each(function(index) {
           if ($(this).css('position') == 'static') {
             $(this).wrap(wrapper).before(spinner).after(clear_div);
           } else {
@@ -109,7 +119,7 @@
       } else {
         var body_spinner = $($.railsAjaxHandler.settings.spinner).attr('id', 'rah_body_spinner');
 
-        animationTarget_obj.prepend(body_spinner);
+        $animationTarget.prepend(body_spinner);
         body_spinner.show();
       }
     },
@@ -158,7 +168,9 @@
       var handler = _getData(objectToHandle, 'handler');
       if (handler == true) handler = $(objectToHandle).attr('id');
       var target = _getData(objectToHandle, 'target', handler);
+      if (target == true) target = $(objectToHandle).attr('id');
       var requester = _getData(objectToHandle, 'requester', target);
+      if (requester == true) requester = $(objectToHandle).attr('id');
       
       if (handler != undefined) {
         if (handler[0] == "#" || handler[0] == ".") handler = handler.substr(1);
@@ -185,22 +197,22 @@
 
     /** HTML Request Sucess Actions **/
     htmlActions: {
-      replace_html: function(dataToHandle, event, data, status, xhr) {
+      replaceWith: function(target, dataToHandle, event, data, status, xhr) {
         $.railsAjaxHandler.spinnersAnimationStop(dataToHandle);
-        $(dataToHandle.target).replaceWith(data);
+        $(target).replaceWith(data);
         return true;
       },
 
-      replace_html: function(dataToHandle, event, data, status, xhr) {
-        $(dataToHandle.target).html(data);
+      replaceHtml: function(target, dataToHandle, event, data, status, xhr) {
+        $(target).html(data);
       },
 
-      append: function(dataToHandle, event, data, status, xhr) {
-        $(dataToHandle.target).append(data);
+      append: function(target, dataToHandle, event, data, status, xhr) {
+        $(target).append(data);
       },
 
-      prepend: function(dataToHandle, event, data, status, xhr) {
-        $(dataToHandle.target).prepend(data);
+      prepend: function(target, dataToHandle, event, data, status, xhr) {
+        $(target).prepend(data);
       }
     },
     /** /HTML Request Sucess Actions **/
@@ -241,19 +253,19 @@
       _rahDebug(model_name + ' has the following errors:\n' + errorsArray.join('\n'));
     },
 
-    ajaxBeforesend: function(xhr, settings, dataToHandle, event) {
+    ajaxBeforesend: function(xhr, settings, dataToHandle, event, element) {
       $.railsAjaxHandler.clearErrorMessages();
-      eval(_getCallback(dataToHandle, 'beforesend') + '(xhr, settings)');
+      eval(_getCallback(dataToHandle, 'beforesend') + '(xhr, settings, element)');
       $.railsAjaxHandler.spinnersAnimationStart(dataToHandle);
-      eval(_getCallback(dataToHandle, 'ajax_start') + '(xhr, settings)');
+      eval(_getCallback(dataToHandle, 'ajax_start') + '(xhr, settings, element)');
 
       _rahDebug('function: ajaxBeforesend');
     },
 
-    ajaxSuccess: function(data, status, xhr, dataToHandle, event) {
+    ajaxSuccess: function(data, status, xhr, dataToHandle, event, element) {
       var skipAnimation = false;
-      if (dataToHandle.type == 'html' && dataToHandle.target != undefined && $.railsAjaxHandler.htmlActions[dataToHandle.action] != undefined) {
-        skipAnimation = $.railsAjaxHandler.htmlActions[dataToHandle.action](dataToHandle, event, data, status, xhr);
+      if (dataToHandle.type.toLowerCase() == 'html' && dataToHandle.target != undefined && $.railsAjaxHandler.htmlActions[dataToHandle.action] != undefined) {
+        skipAnimation = $.railsAjaxHandler.htmlActions[dataToHandle.action](dataToHandle.target, dataToHandle, event, data, status, xhr);
         _rahDebug('html action: ' + dataToHandle.action);
       }
       
@@ -265,34 +277,34 @@
         }
       }
 
-      eval(_getCallback(dataToHandle, 'success') + '(data, status, xhr)');
+      eval(_getCallback(dataToHandle, 'success') + '(data, status, xhr, element)');
       if (!skipAnimation) $.railsAjaxHandler.spinnersAnimationStop(dataToHandle);
-      eval(_getCallback(dataToHandle, 'ajax_stop') + '(data, status, xhr)');
+      eval(_getCallback(dataToHandle, 'ajax_stop') + '(data, status, xhr, element)');
 
       _rahDebug('function: ajaxSuccess');
     },
 
-    ajaxError: function(xhr, status, error, dataToHandle, event) {
+    ajaxError: function(xhr, status, error, dataToHandle, event, element) {
       if (dataToHandle.type == 'json' && dataToHandle.show_errors) {
         var data = $.parseJSON(xhr.responseText);
         $.railsAjaxHandler.showErrorMessages(dataToHandle.show_errors, data.errors != null ? data.errors : data);
-      } else if (dataToHandle.type == 'html' && dataToHandle.requester != undefined) {
-        $(dataToHandle.requester).html(xhr.responseText);
+      } else if (dataToHandle.type == 'html' && dataToHandle.requester != undefined && $.railsAjaxHandler.htmlActions[dataToHandle.action] != undefined) {
+        $.railsAjaxHandler.htmlActions[dataToHandle.action](dataToHandle.requester, dataToHandle, event, xhr.responseText, status, xhr);
       }
       
       if (xhr.status == 500) {
         $.railsAjaxHandler.handleServerError(dataToHandle, event, xhr, status, error);
       }
 
-      eval(_getCallback(dataToHandle, 'error') + '(xhr, status, error)');
+      eval(_getCallback(dataToHandle, 'error') + '(xhr, status, error, element)');
       $.railsAjaxHandler.spinnersAnimationStop(dataToHandle);
-      eval(_getCallback(dataToHandle, 'ajax_stop') + '(xhr, status, error)');
+      eval(_getCallback(dataToHandle, 'ajax_stop') + '(xhr, status, error, element)');
 
       _rahDebug('function: ajaxError');
       _rahDebug(_getCallback(dataToHandle, 'error'));
     },
 
-    ajaxComplete: function(xhr, status, dataToHandle, event) {
+    ajaxComplete: function(xhr, status, dataToHandle, event, element) {
       _rahDebug('function: ajaxComplete');
     },
 
